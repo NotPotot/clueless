@@ -1,0 +1,81 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+/**
+ * This file contains a minimal example of an iterative (Non-Linear) "OpMode". An OpMode is a
+ * 'program' that runs in either the autonomous or the TeleOp period of an FTC match. The names
+ * of OpModes appear on the menu of the FTC Driver Station. When an selection is made from the
+ * menu, the corresponding OpMode class is instantiated on the Robot Controller and executed.
+ *
+ * Remove the @Disabled annotation on the next line or two (if present) to add this OpMode to the
+ * Driver Station OpMode list, or add a @Disabled annotation to prevent this OpMode from being
+ * added to the Driver Station.
+ */
+@TeleOp
+
+public class shooter extends OpMode {
+	
+	public DcMotor shootmotor;
+	/* Declare OpMode members. */
+
+
+	@Override
+	public void init() {
+		telemetry.addData("Status", "Initialized");
+		shootmotor = hardwareMap.get(DcMotor.class, "shootmotor");
+		shootmotor.setDirection(DcMotor.Direction.REVERSE);
+
+	}
+
+	/*
+	 * Code to run REPEATEDLY after the driver hits INIT, but before they hit PLAY
+	 */
+	@Override
+	public void init_loop() {
+	}
+
+	/*
+	 * Code to run ONCE when the driver hits PLAY
+	 */
+	@Override
+	public void start() {
+
+	}
+
+	/*
+	 * Code to run REPEATEDLY after the driver hits PLAY but before they hit STOP
+	 */
+
+	public void loop() {
+	
+	if (gamepad1.a){
+		shootmotor.setPower(.3);
+	}
+	else if (gamepad1.b){
+		shootmotor.setPower(.5);
+	} 
+	else if (gamepad1.y){
+		shootmotor.setPower(.7);
+	}
+	else if (gamepad1.x){
+		shootmotor.setPower(.9);
+	}
+	
+	else{
+		shootmotor.setPower(0);
+	}
+
+	}
+
+	
+}
