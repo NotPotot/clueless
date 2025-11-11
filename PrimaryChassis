@@ -1,1 +1,69 @@
+package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+//import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.qualcomm.robotcore.util.ElapsedTime;
+//import com.qualcomm.robotcore.hardware.IMU;
+//use Navigation and Orientation classes for Field-Centric Driving
+import com.qualcomm.robotcore.util.Range;
+
+@TeleOp(name = "Cursor");
+
+public class Cursor extends OpMode {
+
+  private DcMotor fl0;
+	private DcMotor fr1;
+	private DcMotor bl2;
+	private DcMotor br3;
+  private DcMotorEx shootmotor;
+  private Servo Servo1;
+
+  @Override
+  public void init() {
+    //everything in here runs once when you press initialize
+
+    telemetry.addData("Status", "Initialized");
+    telemetry.update();
+
+    shootmotor = hardwareMap.get(DcMotorEx.class, "shootmotor");
+    Servo1 = hardwareMap.get(Servo.class, "Servo1);
+    fl0 = hardwareMap.get(DcMotor.class, "fl0");
+		fr1 = hardwareMap.get(DcMotor.class, "fr1");
+		bl2 = hardwareMap.get(DcMotor.class, "bl2");
+		br3 = hardwareMap.get(DcMotor.class, "br3");
+
+    shootmotor.setDirection(DcMotorEx.Direction.REVERSE);
+    fl0.setDirection(DcMotor.Direction.FORWARD);
+		fr1.setDirection(DcMotor.Direction.FORWARD);
+		bl2.setDirection(DcMotor.Direction.FORWARD);
+		br3.setDirection(DcMotor.Direction.FORWARD);
+
+    shootmotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+  }
+
+  public void loop() {
+
+  }
+
+  private class Movement {
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
