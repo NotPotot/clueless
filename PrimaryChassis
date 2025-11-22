@@ -16,12 +16,12 @@ import com.qualcomm.robotcore.util.Range;
 
 public class Cursor extends OpMode {
 
-  private DcMotor fl0;
+	private DcMotor fl0;
 	private DcMotor fr1;
 	private DcMotor bl2;
 	private DcMotor br3;
-  private DcMotorEx shootmotor;
-  private Servo Servo1;
+	private DcMotorEx shootmotor;
+	private Servo Servo1;
 
   @Override
   public void init() {
@@ -33,15 +33,15 @@ public class Cursor extends OpMode {
     shootmotor = hardwareMap.get(DcMotorEx.class, "shootmotor");
     Servo1 = hardwareMap.get(Servo.class, "Servo1);
     fl0 = hardwareMap.get(DcMotor.class, "fl0");
-		fr1 = hardwareMap.get(DcMotor.class, "fr1");
-		bl2 = hardwareMap.get(DcMotor.class, "bl2");
-		br3 = hardwareMap.get(DcMotor.class, "br3");
+	fr1 = hardwareMap.get(DcMotor.class, "fr1");
+	bl2 = hardwareMap.get(DcMotor.class, "bl2");
+	br3 = hardwareMap.get(DcMotor.class, "br3");
 
-    shootmotor.setDirection(DcMotorEx.Direction.REVERSE);
-    fl0.setDirection(DcMotor.Direction.FORWARD);
-		fr1.setDirection(DcMotor.Direction.FORWARD);
-		bl2.setDirection(DcMotor.Direction.FORWARD);
-		br3.setDirection(DcMotor.Direction.FORWARD);
+    shootmotor.setDirection(DcMotorEx.Direction.FORWARD);
+    fl0.setDirection(DcMotor.Direction.REVERSE);
+	fr1.setDirection(DcMotor.Direction.FORWARD);
+	bl2.setDirection(DcMotor.Direction.REVERSE);
+	br3.setDirection(DcMotor.Direction.FORWARD);
 
     shootmotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
   }
