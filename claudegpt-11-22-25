@@ -1,0 +1,80 @@
+package org.firstinspires.ftc.teamcode;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+@TeleOp
+public class claudegpt extends OpMode {
+	
+	public DcMotorEx shootmotor;
+	public Servo Servo1;
+	public double velocity;
+	
+	@Override
+	public void init() {
+		telemetry.addData("Status", "Initialized");
+		shootmotor = hardwareMap.get(DcMotorEx.class, "shootmotor");
+		shootmotor.setDirection(DcMotorEx.Direction.REVERSE);
+		Servo1 = hardwareMap.get(Servo.class, "Servo1");
+		// Fixed: changed 'shooter' to 'shootmotor'
+		shootmotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+	}
+	
+	@Override
+	public void init_loop() {
+		
+	}
+	
+	@Override
+	public void start() {
+	}
+	
+	public void loop() {
+		// Set motor power based on gamepad input
+		shootmotor.setPower(getShot());
+		
+		// Control servo
+		testingservo();
+		
+		// Get and display velocity
+		velocitycheck();
+		
+		telemetry.update();
+	}
+	
+	private void velocitycheck(){
+		// Fixed: changed 'shooter' to 'shootmotor'
+		velocity = shootmotor.getVelocity();
+		telemetry.addData("Velocity (ticks/sec)", velocity);
+		
+		// Optional: Also display RPM (RevolutionsPerMinute)
+		// Assuming your encoder has 28 ticks per revolution (adjust if different)
+		double rpm = (velocity / 28.0) * 60.0;
+		telemetry.addData("RPM", rpm);
+		
+		// Display current power setting
+		telemetry.addData("Power", shootmotor.getPower());
+	}
+	
+	// Testing functions
+	private double getShot(){
+		if (gamepad1.a) return 0.3;
+		if (gamepad1.b) return 0.5;
+		if (gamepad1.y) return 0.7;
+		if (gamepad1.x) return 0.9;
+		return 0;
+	}
+	
+	private void testingservo(){
+		if (gamepad1.right_bumper) {
+			Servo1.setPosition(.2);
+		}
+		if (gamepad1.left_bumper) {
+			Servo1.setPosition(0);
+		}
+	}
+}
