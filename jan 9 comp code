@@ -1,0 +1,158 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+
+
+@TeleOp(name = "VelocityBasedDrive")
+
+public class VelocityBasedDrive extends OpMode {
+	
+	public DcMotorEx fl0;
+	public DcMotorEx fr1;
+	public DcMotorEx bl2;
+	public DcMotorEx br3;
+	public DcMotorEx shootmotor;
+	public DcMotorEx intakemotor;
+	public Servo cs1;
+	public Servo kick;
+	public DcMotor cyclermotor;
+	public double cpos;
+	public int cycle;
+
+	
+	
+	@Override
+	public void init() {
+		
+		// fl0 must be negative for forward
+		// fr1 must be negative for forward
+		// bl2 must be positive for forward
+		// br3 must be positive for forward
+		fl0 = hardwareMap.get(DcMotorEx.class, "fl0");
+		fr1 = hardwareMap.get(DcMotorEx.class, "fr1");
+		bl2 = hardwareMap.get(DcMotorEx.class, "bl2");
+		br3 = hardwareMap.get(DcMotorEx.class, "br3");
+		shootmotor = hardwareMap.get(DcMotorEx.class, "shootmotor");
+		cs1 = hardwareMap.get(Servo.class, "cs1");
+		kick = hardwareMap.get(Servo.class, "kick");
+		intakemotor = hardwareMap.get(DcMotorEx.class, "intakemotor");
+		cyclermotor = hardwareMap.get(DcMotor.class, "cyclermotor");
+		
+		fl0.setDirection(DcMotorEx.Direction.REVERSE);
+		fr1.setDirection(DcMotorEx.Direction.FORWARD);
+		bl2.setDirection(DcMotorEx.Direction.REVERSE);
+		br3.setDirection(DcMotorEx.Direction.FORWARD);
+		intakemotor.setDirection(DcMotorEx.Direction.REVERSE);
+		shootmotor.setDirection(DcMotorEx.Direction.FORWARD);
+
+		cyclermotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+
+	}
+	
+	@Override
+	public void loop() {
+		
+		Movement movement = new Movement();
+		Module module = new Module();
+		Module.Shooter shooter = module.new Shooter();
+		
+		movement.update();
+		shooter.motor();
+		shooter.intake();
+		shooter.kicker();
+
+				if (gamepad2.right_bumper) {
+					cs1.setPosition(1);
+				}
+				else if (gamepad2.left_bumper) {
+					cs1.setPosition(0);
+				}
+				else{
+					cs1.setPosition(.5);
+				}
+
+		if(gamepad1.leftBumperWasReleased()){
+
+			cyclermotor.setTargetPosition(cycle+=96);
+			cyclermotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+			cyclermotor.setPower(.4);
+		
+		}
+		
+		else if(gamepad1.rightBumperWasReleased()){
+
+			cyclermotor.setTargetPosition(cycle-=96);
+			cyclermotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+			cyclermotor.setPower(.4);
+		
+		}
+		
+			
+	}
+	
+	private class Movement {
+		
+		public void update() {
+			double y = gamepad1.right_trigger - gamepad1.left_trigger;
+			double x = gamepad1.right_stick_x;
+			double rx = gamepad1.left_stick_x;
+			
+			double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1.0);
+			
+			double flPower = (y + x + rx) / denominator;
+			double blPower = (y - x + rx) / denominator;
+			double frPower = (y - x - rx) / denominator;
+			double brPower = (y + x - rx) / denominator;
+			
+			fl0.setPower(flPower);
+			fr1.setPower(frPower);
+			bl2.setPower(blPower);
+			br3.setPower(brPower);
+		}
+	}
+	
+	private class Module {
+		public class Shooter {
+			public void motor() {
+				if (gamepad2.a) {
+					intakemotor.setPower(.3);
+				} else if (gamepad2.x) {
+					intakemotor.setPower(.9);
+				} else {
+					intakemotor.setPower(0);
+				}
+				
+				telemetry.addData("shooterRPM", shootmotor.getVelocity());
+				
+			}
+			
+			public void intake() {
+				if (gamepad2.b) {
+					shootmotor.setPower(.9);
+				} else {
+					shootmotor.setPower(0);
+				}
+				
+				telemetry.addData("intakeRPM", intakemotor.getVelocity());
+			}
+			public void kicker(){
+				if(gamepad2.right_trigger > 0.9){
+					kick.setPosition(.85);
+				}
+				else if (gamepad2.left_trigger > 0.9){
+					kick.setPosition(0.5);
+				}
+				else if(gamepad2.y){
+					kick.setPosition(.67);
+				}
+			}
+			
+			
+		}
+	}
+}
