@@ -1,0 +1,465 @@
+package org.firstinspires.ftc.teamcode;
+// "i wake up in the morning feeling like p diddy" -kesha
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
+import com.qualcomm.hardware.rev.RevColorSensorV3;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class AutonomousMovement {
+	private final Telemetry telemetry;
+	private final Limelight3A limelight;
+	private final RevColorSensorV3 colorsense;
+	private final Servo kick;
+	private final DcMotorEx fl0;
+	private final DcMotorEx fr1;
+	private final DcMotorEx bl2;
+	private final DcMotorEx br3;
+	private final DcMotorEx shootmotor;
+	private final DcMotorEx intakemotor;
+	private final DcMotorEx cyclermotor;
+	private final ElapsedTime runtime = new ElapsedTime();
+	private final Movement movementHelper = new Movement();
+	private final Module moduleHelper = new Module();
+	private final Motors motorHelper = new Motors();
+	private final List<Integer> fiducialIds = new ArrayList<>();
+	private boolean isLimelightStarted;
+	private int iteration = 0;
+	
+	private final double driveWheelDiameter = Math.round(96 / 25.4); //mm to inches
+	private final double driveWheelCircumference = driveWheelDiameter * Math.PI;
+	private final int driveMotorTicksPerRevolution = 380;
+	private final double driveMotorTicksPerInch = driveMotorTicksPerRevolution / driveWheelCircumference;
+	
+	public AutonomousMovement(HardwareMap hardwareMap, Telemetry telemetry) {
+		this.telemetry = telemetry;
+		this.limelight = hardwareMap.get(Limelight3A.class, "ll3a");
+		this.colorsense = hardwareMap.get(RevColorSensorV3.class, "colorsense");
+		this.kick = hardwareMap.get(Servo.class, "kick");
+		this.fl0 = hardwareMap.get(DcMotorEx.class, "fl0");
+		this.fr1 = hardwareMap.get(DcMotorEx.class, "fr1");
+		this.bl2 = hardwareMap.get(DcMotorEx.class, "bl2");
+		this.br3 = hardwareMap.get(DcMotorEx.class, "br3");
+		this.shootmotor = hardwareMap.get(DcMotorEx.class, "shootmotor");
+		this.intakemotor = hardwareMap.get(DcMotorEx.class, "intakemotor");
+		this.cyclermotor = hardwareMap.get(DcMotorEx.class, "cyclermotor");
+		this.fl0.setDirection(DcMotorEx.Direction.REVERSE);
+		this.bl2.setDirection(DcMotorEx.Direction.REVERSE);
+		this.intakemotor.setDirection(DcMotorEx.Direction.REVERSE);
+	}
+	
+	public Movement movement() {
+		return movementHelper;
+	}
+	
+	public Module module() {
+		return moduleHelper;
+	}
+	
+	public Limelight3A limelightDevice() {
+		return limelight;
+	}
+	
+	public Motors motors() {
+		return motorHelper;
+	}
+	
+	public class Motors {
+		public DcMotorEx fl0() {
+			return fl0;
+		}
+		
+		public DcMotorEx fr1() {
+			return fr1;
+		}
+		
+		public DcMotorEx bl2() {
+			return bl2;
+		}
+		
+		public DcMotorEx br3() {
+			return br3;
+		}
+		
+		public Servo kick() {
+			return kick;
+		}
+	}
+	
+	public void startLimelight() {
+		if (!isLimelightStarted) {
+			limelight.start();
+			isLimelightStarted = true;
+		}
+	}
+	
+	public void stopLimelight() {
+		if (isLimelightStarted) {
+			limelight.stop();
+			isLimelightStarted = false;
+		}
+	}
+	
+	public void runtimeRemaining(double timeMs) {
+		telemetry.addData("Runtime remaining: ", (timeMs - runtime.milliseconds()));
+		telemetry.update();
+	}
+	
+	public class Movement {
+		// "and when im rock hard i ******* rock hard" -ken ashcorp
+		
+		public SpeedBased speedBased() {
+			return new SpeedBased();
+		}
+		
+		public EncoderBased encoderBased() {
+			return new EncoderBased();
+		}
+		
+		public class SpeedBased {
+			Module.ModeChange modeChange = new Module().modeChange();
+			
+			public void drive(double speed, double timeMs) {
+				modeChange.runWithEncoders();
+				fl0.setPower(speed);
+				fr1.setPower(speed);
+				bl2.setPower(speed);
+				br3.setPower(speed);
+				runtime.reset();
+				while (runtime.milliseconds() <= timeMs) {
+					runtimeRemaining(timeMs);
+				}
+				stop();
+			}
+			
+			public void slide(double speed, double timeMs) {
+				modeChange.runWithEncoders();
+				fl0.setPower(speed);
+				fr1.setPower(-speed);
+				bl2.setPower(-speed);
+				br3.setPower(speed);
+				runtime.reset();
+				while (runtime.milliseconds() < timeMs) {
+					runtimeRemaining(timeMs);
+				}
+				stop();
+			}
+			
+			public void rotate(double speed, double timeMs) {
+				modeChange.runWithEncoders();
+				fl0.setPower(speed);
+				fr1.setPower(-speed);
+				bl2.setPower(speed);
+				br3.setPower(-speed);
+				runtime.reset();
+				while (runtime.milliseconds() < timeMs) {
+					runtimeRemaining(timeMs);
+				}
+				stop();
+			}
+			
+			public void stop() {
+				fl0.setPower(0);
+				fr1.setPower(0);
+				bl2.setPower(0);
+				br3.setPower(0);
+			}
+		}
+		
+		public class EncoderBased {
+			Module module = new Module();
+			Module.ModeChange modeChange = module.modeChange();
+			
+			public void drive(double speed, double distance) {
+				//left motors need to input as negative
+				iteration = 0;
+				float targetTicks = (float) (driveMotorTicksPerInch * distance);
+				fl0.setTargetPosition(Math.round(targetTicks));
+				fr1.setTargetPosition(Math.round(targetTicks));
+				bl2.setTargetPosition(Math.round(targetTicks));
+				br3.setTargetPosition(Math.round(targetTicks));
+				modeChange.runToPosition();
+				fl0.setTargetPositionTolerance(Constants.targetPositionTolerance);
+				fr1.setTargetPositionTolerance(Constants.targetPositionTolerance);
+				bl2.setTargetPositionTolerance(Constants.targetPositionTolerance);
+				br3.setTargetPositionTolerance(Constants.targetPositionTolerance);
+				fl0.setPower(speed);
+				fr1.setPower(speed);
+				bl2.setPower(speed);
+				br3.setPower(speed);
+				while (fl0.isBusy() || fr1.isBusy() || bl2.isBusy() || br3.isBusy()) {
+					telemetry.addData("Waiting for motor completion. Iteration", iteration++);
+					telemetry.update();
+				}
+				fl0.setPower(0);
+				fr1.setPower(0);
+				bl2.setPower(0);
+				br3.setPower(0);
+			}
+			
+			public void slide(double speed, double distance) {
+				//left motors need to input as negative
+				iteration = 0;
+				float targetTicks = (float) (driveMotorTicksPerInch * distance);
+				fl0.setTargetPosition(Math.round(targetTicks));
+				fr1.setTargetPosition(Math.round(-targetTicks));
+				bl2.setTargetPosition(Math.round(-targetTicks));
+				br3.setTargetPosition(Math.round(targetTicks));
+				modeChange.runToPosition();
+				fl0.setTargetPositionTolerance(Constants.targetPositionTolerance);
+				fr1.setTargetPositionTolerance(Constants.targetPositionTolerance);
+				bl2.setTargetPositionTolerance(Constants.targetPositionTolerance);
+				br3.setTargetPositionTolerance(Constants.targetPositionTolerance);
+				fl0.setPower(speed);
+				fr1.setPower(speed);
+				bl2.setPower(speed);
+				br3.setPower(speed);
+				while (fl0.isBusy() || fr1.isBusy() || bl2.isBusy() || br3.isBusy()) {
+					telemetry.addData("Waiting for motor completion. Iteration", iteration++);
+					telemetry.update();
+				}
+				fl0.setPower(0);
+				fr1.setPower(0);
+				bl2.setPower(0);
+				br3.setPower(0);
+			}
+			
+			public void rotate(double speed, double distance) {
+				//left motors need to input as negative
+				iteration = 0;
+				float targetTicks = (float) (driveMotorTicksPerInch * distance);
+				fl0.setTargetPosition(Math.round(targetTicks));
+				fr1.setTargetPosition(Math.round(-targetTicks));
+				bl2.setTargetPosition(Math.round(targetTicks));
+				br3.setTargetPosition(Math.round(-targetTicks));
+				modeChange.runToPosition();
+				fl0.setTargetPositionTolerance(Constants.targetPositionTolerance);
+				fr1.setTargetPositionTolerance(Constants.targetPositionTolerance);
+				bl2.setTargetPositionTolerance(Constants.targetPositionTolerance);
+				br3.setTargetPositionTolerance(Constants.targetPositionTolerance);
+				fl0.setPower(speed);
+				fr1.setPower(speed);
+				bl2.setPower(speed);
+				br3.setPower(speed);
+				while (fl0.isBusy() || fr1.isBusy() || bl2.isBusy() || br3.isBusy()) {
+					telemetry.addData("Waiting for motor completion. Iteration", iteration++);
+					telemetry.update();
+				}
+				fl0.setPower(0);
+				fr1.setPower(0);
+				bl2.setPower(0);
+				br3.setPower(0);
+			}
+		}
+	}
+	
+	public class Module {
+		// "tickle my fancy tickle my prostate" -ken ashcorp
+		private final Limelight limelightHelper = new Limelight();
+		private final Intake intakeHelper = new Intake();
+		private final ModeChange modeChangeHelper = new ModeChange();
+		private final Colorsense colorsenseHelper = new Colorsense();
+		
+		public void shoot(double velocity/*, long timeMs*/) {
+			shootmotor.setVelocity(velocity);
+		/*	runtime.reset();
+			while (runtime.milliseconds() < timeMs) {
+				runtimeRemaining(timeMs);
+			}
+			shootmotor.setVelocity(0);*/
+		}
+		
+		public class ModeChange {
+			public void resetEncoders() {
+				fl0.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+				fr1.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+				bl2.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+				br3.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+			}
+			
+			public void runWithEncoders() {
+				resetEncoders();
+				fl0.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+				fr1.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+				bl2.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+				br3.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+			}
+			
+			public void runToPosition() {
+				resetEncoders();
+				fl0.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+				fr1.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+				bl2.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+				br3.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+			}
+			
+			public void runWithoutEncoders() {
+				resetEncoders();
+				fl0.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+				fr1.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+				bl2.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+				br3.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+			}
+		}
+		
+		public class Intake {
+			public void start() {
+				intakemotor.setPower(0.5);
+			}
+			
+			public void stop() {
+				intakemotor.setPower(0);
+			}
+		}
+		
+		public void waited(int time) {
+			runtime.reset();
+			while (runtime.milliseconds() < time) {
+				runtimeRemaining(time);
+			}
+		}
+		
+		public void changeBalls(int rotations) {
+			int position = rotations*96;
+			cyclermotor.setTargetPosition(position);
+			cyclermotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+			cyclermotor.setPower(1);
+		}
+		public void shootThatThang(){
+			
+		}
+		
+		public void changeBall(){
+			
+		}
+
+		public void kick() {
+		 
+			kick.setPosition(0.85);
+			runtime.reset();
+			while (runtime.milliseconds() < 500) {
+				runtimeRemaining(500);
+			}
+			kick.setPosition(0.5);
+			
+		}
+		
+		public class Colorsense {
+			
+			public DetectedColor categorizeColor(NormalizedRGBA color) {
+				float red = color.red;
+				float green = color.green;
+				float blue = color.blue;
+				
+				final float MIN_INTENSITY = 0.2f;
+				final float GREEN_RATIO_DIFF = 0.25f;
+				final float PURPLE_RATIO_DIFF = 0.2f;
+				final float MAX_DIFFERENCE = 0.2f;
+				
+				if (red < MIN_INTENSITY && green < MIN_INTENSITY && blue < MIN_INTENSITY) {
+					return DetectedColor.UNKNOWN;
+				}
+				
+				if (green > red + GREEN_RATIO_DIFF && green > blue + GREEN_RATIO_DIFF) {
+					return DetectedColor.GREEN;
+				}
+				
+				if (Math.abs(red - blue) <= PURPLE_RATIO_DIFF && green <= MAX_DIFFERENCE) {
+					return DetectedColor.PURPLE;
+				}
+				
+				return DetectedColor.UNKNOWN;
+			}
+			
+			public NormalizedRGBA getColor() {
+				cyclermotor.setPower(0.5);
+				runtime.reset();
+				while (runtime.milliseconds() < 750) {
+					runtimeRemaining((long) (runtime.milliseconds() - 750));
+				}
+				cyclermotor.setPower(0);
+				
+				if (!colorsense.isLightOn()) {
+					colorsense.enableLed(true);
+				}
+				
+				return colorsense.getNormalizedColors();
+			}
+			
+		}
+		
+		public Colorsense colorsense() {
+			return colorsenseHelper;
+		}
+		
+		public Limelight limelight() {
+			return limelightHelper;
+		}
+		
+		public Intake intake() {
+			return intakeHelper;
+		}
+		
+		public ModeChange modeChange() {
+			return modeChangeHelper;
+		}
+		
+		public class Limelight {
+			public List<Integer> getResults() {
+				fiducialIds.clear();
+				LLResult result = limelight.getLatestResult();
+				if (result != null && result.isValid()) {
+					List<LLResultTypes.FiducialResult> detectedTags = result.getFiducialResults();
+					for (LLResultTypes.FiducialResult tag : detectedTags) {
+						fiducialIds.add(tag.getFiducialId());
+					}
+				}
+				return Collections.unmodifiableList(new ArrayList<>(fiducialIds));
+			}
+			
+			public List<Integer> getMonolithSequence(List<Integer> detectedTags) {
+				LLResult result = limelight.getLatestResult();
+				List<Integer> sequence = new ArrayList<>();
+				if (result != null && result.isValid()) {
+					for (Integer tag : detectedTags) {
+						// 1 means green, 0 means purple
+						if (tag == 21) {
+							sequence.add(1);
+							sequence.add(0);
+							sequence.add(0);
+							return sequence;
+						} else if (tag == 22) {
+							sequence.add(0);
+							sequence.add(1);
+							sequence.add(0);
+							return sequence;
+						} else if (tag == 23) {
+							sequence.add(0);
+							sequence.add(0);
+							sequence.add(1);
+							return sequence;
+						}
+					}
+				}
+				return null;
+			}
+		}
+	}
+	
+	public enum DetectedColor {
+		GREEN,
+		PURPLE,
+		UNKNOWN
+	}
+}
