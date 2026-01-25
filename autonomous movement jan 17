@@ -143,7 +143,8 @@ public class AutonomousMovement {
 				stop();
 			}
 			
-			public void slide(double speed, double timeMs) {
+			public void slide(double speed, int timeMs) {
+			
 				modeChange.runWithEncoders();
 				fl0.setPower(speed);
 				fr1.setPower(-speed);
@@ -213,17 +214,17 @@ public class AutonomousMovement {
 				iteration = 0;
 				float targetTicks = (float) (driveMotorTicksPerInch * distance);
 				fl0.setTargetPosition(Math.round(targetTicks));
-				fr1.setTargetPosition(Math.round(-targetTicks));
-				bl2.setTargetPosition(Math.round(-targetTicks));
+				fr1.setTargetPosition(Math.round(-targetTicks-300));
+				bl2.setTargetPosition(Math.round(-targetTicks+300));
 				br3.setTargetPosition(Math.round(targetTicks));
 				modeChange.runToPosition();
-				fl0.setTargetPositionTolerance(Constants.targetPositionTolerance);
-				fr1.setTargetPositionTolerance(Constants.targetPositionTolerance);
-				bl2.setTargetPositionTolerance(Constants.targetPositionTolerance);
-				br3.setTargetPositionTolerance(Constants.targetPositionTolerance);
+	//			fl0.setTargetPositionTolerance(Constants.targetPositionTolerance);
+	//			fr1.setTargetPositionTolerance(Constants.targetPositionTolerance);
+	//			bl2.setTargetPositionTolerance(Constants.targetPositionTolerance);
+	//			br3.setTargetPositionTolerance(Constants.targetPositionTolerance);
 				fl0.setPower(speed);
-				fr1.setPower(speed);
-				bl2.setPower(speed);
+				fr1.setPower(speed*.6);
+				bl2.setPower(speed*1.4);
 				br3.setPower(speed);
 				while (fl0.isBusy() || fr1.isBusy() || bl2.isBusy() || br3.isBusy()) {
 					telemetry.addData("Waiting for motor completion. Iteration", iteration++);
@@ -331,6 +332,7 @@ public class AutonomousMovement {
 		}
 		
 		public void changeBalls(int rotations) {
+			cyclermotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 			int position = rotations*96;
 			cyclermotor.setTargetPosition(position);
 			cyclermotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
