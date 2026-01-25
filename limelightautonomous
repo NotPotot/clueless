@@ -46,47 +46,55 @@ public class justinz extends LinearOpMode {
 			if (List.of(0, 0, 1).equals(sequence)) {
 				encoderBased.drive(.4, 30);
 				encoderBased.rotate(.4, -13);
+				encoderBased.drive(.4, 10);
 				module.shoot(2200);
-				module.waited(2000);
+				module.waited(3000);
 				module.kick();
 				module.changeBalls(1);
-				module.waited(2000);
-				module.waited(2000);
+				module.waited(3000);
+				
 				module.kick();
 				module.changeBalls(1);
-				module.waited(2000);
+				module.waited(3000);
+				
 				module.kick();
 				module.shoot(0);
 				module.waited(1000);
 			}else if (List.of(0, 1, 0).equals(sequence)) {
 				encoderBased.drive(.4, 30);
 				encoderBased.rotate(.4, -13);
+				encoderBased.drive(.4, 10);
 				module.shoot(2200);
-				module.waited(2000);
+				module.waited(3000);
+				
 				module.kick();
 				module.changeBalls(-1);
-				module.waited(2000);
-				module.waited(2000);
+				module.waited(3000);
+				
 				module.kick();
 				module.changeBalls(-1);
-				module.waited(2000);
+				module.waited(3000);
 				module.kick();
+				
 				module.shoot(0);
 				module.waited(1000);
 			}else if(List.of(1, 0, 0).equals(sequence)){
 				encoderBased.drive(.4, 30);
 				encoderBased.rotate(.4, -13);
+				encoderBased.drive(.4, 10);
 				module.changeBalls(-1);
 				module.shoot(2200);
-				module.waited(4000);
+				module.waited(3000);
+				
 				module.kick();
 				module.changeBalls(-1);
-				module.waited(2000);
-				module.waited(2000);
+				module.waited(3000);
+	
 				module.kick();
 				module.changeBalls(-1);
-				module.waited(2000);
+				module.waited(3000);
 				module.kick();
+				
 				module.shoot(0);
 				module.waited(1000);
 			}else{
