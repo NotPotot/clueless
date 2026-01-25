@@ -1,0 +1,56 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import java.util.Arrays;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
+import java.util.Collections;
+import java.util.List;
+
+@Autonomous(name = "MyConceptAprilTag")
+public class MyConceptAprilTag extends LinearOpMode {
+	// welcome to the thunderdome chat 3: now its personal
+	@Override
+	public void runOpMode() {
+		AutonomousMovement autonomousMovement = new AutonomousMovement(hardwareMap, telemetry);
+		AutonomousMovement.Movement movement = autonomousMovement.movement();
+		AutonomousMovement.Movement.EncoderBased encoderBased = movement.encoderBased();
+		AutonomousMovement.Module module = autonomousMovement.module();
+		AutonomousMovement.Module.ModeChange modeChange = module.modeChange();
+		AutonomousMovement.Module.Limelight limelightHelper = module.limelight();
+		AutonomousMovement.Module.Intake intake = module.intake();
+		AutonomousMovement.Module.Colorsense colorsense = module.colorsense();
+		Limelight3A limelight = autonomousMovement.limelightDevice();
+		limelight.pipelineSwitch(0);
+		autonomousMovement.startLimelight();
+		List<Integer> sequence;
+
+		modeChange.resetEncoders();
+		modeChange.runWithoutEncoders();
+		
+		waitForStart();
+		
+		if (opModeIsActive()) {
+		
+			encoderBased.drive(.2, -20);
+			module.shoot(1900);
+			module.waited(2000);
+			module.kick();
+			module.changeBalls(1);
+			module.waited(2000);
+			module.waited(2000);
+			module.kick();
+			module.changeBalls(1);
+			module.waited(2000);
+			module.kick();
+			module.shoot(0);
+			module.waited(1000);
+			
+			
+			
+			
+	
+		}
+	}
+}
