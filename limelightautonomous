@@ -8,8 +8,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import java.util.Collections;
 import java.util.List;
 
-@Autonomous(name = "justinz")
-public class justinz extends LinearOpMode {
+@Autonomous(name = "bluebackAuto")
+public class bluebackAuto extends LinearOpMode {
 	// welcome to the thunderdome chat 3: now its personal
 	@Override
 	public void runOpMode() {
@@ -46,8 +46,8 @@ public class justinz extends LinearOpMode {
 			if (List.of(0, 0, 1).equals(sequence)) {
 				encoderBased.drive(.4, 30);
 				encoderBased.rotate(.4, -15);
-				encoderBased.drive(.4, 10);
-				module.shoot(1500);
+				encoderBased.drive(.4, 20);
+				module.shoot(1700);
 				module.waited(3000);
 				module.kick();
 				module.changeBalls(1);
@@ -63,8 +63,8 @@ public class justinz extends LinearOpMode {
 			}else if (List.of(0, 1, 0).equals(sequence)) {
 				encoderBased.drive(.4, 30);
 				encoderBased.rotate(.4, -15);
-				encoderBased.drive(.4, 10);
-				module.shoot(1500);
+				encoderBased.drive(.4, 20);
+				module.shoot(1700);
 				module.waited(3000);
 				
 				module.kick();
@@ -81,9 +81,9 @@ public class justinz extends LinearOpMode {
 			}else if(List.of(1, 0, 0).equals(sequence)){
 				encoderBased.drive(.4, 30);
 				encoderBased.rotate(.4, -15);
-				encoderBased.drive(.4, 10);
+				encoderBased.drive(.4, 20);
 				module.changeBalls(-1);
-				module.shoot(1500);
+				module.shoot(1700);
 				module.waited(3000);
 				
 				module.kick();
