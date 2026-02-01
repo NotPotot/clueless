@@ -96,10 +96,10 @@ public class VelocityBasedDrive extends OpMode {
 		shooter.kickchecker();
 		module.lift();
 		
-		if (gamepad1.leftBumperWasPressed()) {
+		if (gamepad2.leftBumperWasPressed()) {
 			targetCyclePosition += TICKS_PER_POSITION;
 			setCyclerPosition(targetCyclePosition);
-		} else if (gamepad1.rightBumperWasPressed()) {
+		} else if (gamepad2.rightBumperWasPressed()) {
 			targetCyclePosition -= TICKS_PER_POSITION;
 			setCyclerPosition(targetCyclePosition);
 		}
