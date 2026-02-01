@@ -1,0 +1,239 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+
+
+@TeleOp(name = "VelocityBasedDrive")
+
+public class VelocityBasedDrive extends OpMode {
+	
+	public DcMotorEx fl0;
+	public DcMotorEx fr1;
+	public DcMotorEx bl2;
+	public DcMotorEx br3;
+	public DcMotorEx shootmotor;
+	public DcMotorEx intakemotor;
+	public Servo linear0;
+	public Servo linear1;
+	public Servo kick;
+	public DcMotorEx cyclermotor;
+	
+	public double cpos;
+	public int cycle;
+	
+	// Cycler motor configuration
+	private static final int TICKS_PER_POSITION = 96;
+	private static final double CYCLER_P = 15.0; // Increased proportional gain
+	private static final int POSITION_TOLERANCE = 10; // Ticks - how close is "close enough"
+	private int targetCyclePosition = 0;
+
+	// Position PIDF - Controls how the motor reaches target positions
+	private static final double POSITION_P = 5.0;   // Proportional: how aggressively to correct error
+	private static final double POSITION_I = 0.1;   // Integral: corrects persistent small errors
+	private static final double POSITION_D = 0.2;   // Derivative: dampens oscillation/overshoot
+	private static final double POSITION_F = 0.0;   // Feedforward: usually 0 for position control
+	
+	// Velocity PIDF - Controls the motor's speed regulation (if using RUN_USING_ENCODER)
+	private static final double VELOCITY_P = 2.0;   // Start with default, tune if needed
+	private static final double VELOCITY_I = 0.5;   // Helps reach exact velocity
+	private static final double VELOCITY_F = 12.0;  // Feedforward for velocity (motor-specific)
+	
+	
+	@Override
+	public void init() {
+		
+		// fl0 must be negative for forward
+		// fr1 must be negative for forward
+		// bl2 must be positive for forward
+		// br3 must be positive for forward
+		fl0 = hardwareMap.get(DcMotorEx.class, "fl0");
+		fr1 = hardwareMap.get(DcMotorEx.class, "fr1");
+		bl2 = hardwareMap.get(DcMotorEx.class, "bl2");
+		br3 = hardwareMap.get(DcMotorEx.class, "br3");
+		shootmotor = hardwareMap.get(DcMotorEx.class, "shootmotor");
+		linear0 = hardwareMap.get(Servo.class, "linear0");
+		linear1 = hardwareMap.get(Servo.class, "linear1");
+		kick = hardwareMap.get(Servo.class, "kick");
+		intakemotor = hardwareMap.get(DcMotorEx.class, "intakemotor");
+		cyclermotor = hardwareMap.get(DcMotorEx.class, "cyclermotor");
+		
+		fl0.setDirection(DcMotorEx.Direction.REVERSE);
+		fr1.setDirection(DcMotorEx.Direction.FORWARD);
+		bl2.setDirection(DcMotorEx.Direction.REVERSE);
+		br3.setDirection(DcMotorEx.Direction.FORWARD);
+		intakemotor.setDirection(DcMotorEx.Direction.REVERSE);
+		shootmotor.setDirection(DcMotorEx.Direction.FORWARD);
+
+		// Configure cycler motor for precise control
+		cyclermotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+		cyclermotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+		
+		cyclermotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+		cyclermotor.setPositionPIDFCoefficients(CYCLER_P);
+	
+		//the PIDF coefficient supplements easing
+		targetCyclePosition = 0;
+		
+		fl0.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+		fr1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+		bl2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+		br3.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+		intakemotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+		shootmotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+
+	}
+	
+	@Override
+	public void loop() {
+		
+		Movement movement = new Movement();
+		Module module = new Module();
+		Module.Shooter shooter = module.new Shooter();
+		
+		movement.update();
+		shooter.motor();
+		shooter.intake();
+		shooter.kicker();
+		shooter.kickchecker();
+		module.lift();
+		
+		if (gamepad2.leftBumperWasPressed()) {
+			targetCyclePosition += TICKS_PER_POSITION;
+			setCyclerPosition(targetCyclePosition);
+		} else if (gamepad2.rightBumperWasPressed()) {
+			targetCyclePosition -= TICKS_PER_POSITION;
+			setCyclerPosition(targetCyclePosition);
+		}
+
+		
+		telemetry.addData("Cycler Target", targetCyclePosition);
+		telemetry.addData("Cycler Current", cyclermotor.getCurrentPosition());
+		telemetry.addData("Cycler Error", Math.abs(targetCyclePosition - cyclermotor.getCurrentPosition()));
+		telemetry.addData("Cycler Busy", cyclermotor.isBusy());
+		telemetry.update();
+		
+			
+	}
+	
+	private void setCyclerPosition(int position) {
+		cyclermotor.setTargetPosition(position);
+		cyclermotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+		
+		int error = Math.abs(position - cyclermotor.getCurrentPosition());
+    
+    	// Scale power based on distance to target
+    	if (error < 10) {
+        	cyclermotor.setPower(0);  // Stop when within tolerance
+    	} else if (error < 30) {
+        	cyclermotor.setPower(0.3);  // Low power when close
+    	} else if (error < 100) {
+        	cyclermotor.setPower(0.6);  // Medium power
+    	} else {
+        	cyclermotor.setPower(1.0);  // Full power when far
+    	}
+	}
+	/*
+	private void updateCyclerPower() {
+		// Only adjust power if motor is actively moving to a target
+		if (cyclermotor.getMode() == DcMotor.RunMode.RUN_TO_POSITION && cyclermotor.isBusy()) {
+			int currentPosition = cyclermotor.getCurrentPosition();
+			int error = Math.abs(targetCyclePosition - currentPosition);
+			
+			// Proportional power reduction as we approach target
+			if (error < 20) {
+				cyclermotor.setPower(0.3); // Very slow for final approach
+			} else if (error < 50) {
+				cyclermotor.setPower(0.5); // Medium speed when close
+			} else {
+				cyclermotor.setPower(1.0); // Full speed when far away
+			}
+		}
+	}
+	*/
+	private class Movement {
+		
+		public void update() {
+			double y = gamepad1.right_trigger - gamepad1.left_trigger;
+			double x = gamepad1.right_stick_x;
+			double rx = gamepad1.left_stick_x;
+			
+			double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1.0);
+			
+			double flPower = (y + x + rx) / denominator;
+			double blPower = (y - x + rx) / denominator;
+			double frPower = (y - x - rx) / denominator;
+			double brPower = (y + x - rx) / denominator;
+			
+			fl0.setPower(flPower);
+			fr1.setPower(frPower);
+			bl2.setPower(blPower);
+			br3.setPower(brPower);
+		}
+	}
+	
+	private class Module {
+		
+		public void lift() {
+			if (gamepad1.dpadUpWasReleased()) {
+				linear0.setPosition(0.6);
+				linear1.setPosition(0.6);
+			} else if (gamepad1.dpadDownWasReleased()) {
+				linear0.setPosition(0.1);
+				linear1.setPosition(0.1);
+			} 
+		}
+		
+		public class Shooter {
+			public void motor() {
+				if (gamepad2.a) {
+					shootmotor.setVelocity(1500);
+				} else if (gamepad2.x) {
+					shootmotor.setVelocity(2200);
+				} else if (gamepad2.b){
+					shootmotor.setVelocity(1900);
+				} else {
+					shootmotor.setVelocity(0);
+				}
+				
+				telemetry.addData("shooterRPM", shootmotor.getVelocity());
+				
+			}
+			
+			public void intake() {
+				if (gamepad1.b) {
+					intakemotor.setPower(.9);
+				} else if(gamepad1.x){
+					intakemotor.setPower(-.3);
+				}else {
+					intakemotor.setPower(0);
+				}
+				
+				telemetry.addData("intakeRPM", intakemotor.getVelocity());
+			}
+			public void kicker(){
+				int error = Math.abs(targetCyclePosition - cyclermotor.getCurrentPosition());
+				if (gamepad2.right_trigger > 0.9 && error <20){
+					kick.setPosition(.85);
+				} else if (gamepad2.left_trigger > 0.9 && error <20){
+					kick.setPosition(0.5);
+				} else if(gamepad2.y){
+					kick.setPosition(.67);
+				}
+			}
+			public void kickchecker(){
+				if(cyclermotor.isBusy() && kick.getPosition()>.7){
+					kick.setPosition(.67);
+				}
+			}
+			
+			
+			
+		}
+	}
+}
