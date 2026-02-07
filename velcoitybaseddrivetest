@@ -79,12 +79,12 @@ public class VelocityBasedDrive extends OpMode {
 		//the PIDF coefficient supplements easing
 		targetCyclePosition = 0;
 		
-		fl0.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-		fr1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-		bl2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-		br3.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-		intakemotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-		shootmotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+		fl0.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+		fr1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+		bl2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+		br3.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+		intakemotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+		shootmotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
 
 	}
@@ -126,17 +126,17 @@ public class VelocityBasedDrive extends OpMode {
 		cyclermotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 		
 		int error = Math.abs(position - cyclermotor.getCurrentPosition());
-    
-    	// Scale power based on distance to target
-    	if (error < 10) {
-        	cyclermotor.setPower(0);  // Stop when within tolerance
-    	} else if (error < 30) {
-        	cyclermotor.setPower(0.3);  // Low power when close
-    	} else if (error < 100) {
-        	cyclermotor.setPower(0.6);  // Medium power
-    	} else {
-        	cyclermotor.setPower(1.0);  // Full power when far
-    	}
+	
+		// Scale power based on distance to target
+		if (error < 10) {
+			cyclermotor.setPower(0);  // Stop when within tolerance
+		} else if (error < 30) {
+			cyclermotor.setPower(0.3);  // Low power when close
+		} else if (error < 100) {
+			cyclermotor.setPower(0.6);  // Medium power
+		} else {
+			cyclermotor.setPower(1.0);  // Full power when far
+		}
 	}
 	/*
 	private void updateCyclerPower() {
@@ -207,7 +207,7 @@ public class VelocityBasedDrive extends OpMode {
 			
 			public void intake() {
 				if (gamepad1.b) {
-					intakemotor.setPower(.9);
+					intakemotor.setPower(.8);
 				} else if(gamepad1.x){
 					intakemotor.setPower(-.3);
 				}else {
